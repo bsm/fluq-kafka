@@ -11,8 +11,8 @@ describe FluQ::Input::Kafka do
   end
 
   before :each do
-    @mock_socket = mock(TCPSocket)
-    TCPSocket.stub!(:new).and_return(@mock_socket) # don't use a real socket
+    @double_socket = double(TCPSocket)
+    TCPSocket.stub(:new).and_return(@double_socket) # don't use a real socket
   end
 
   subject { input(reactor) }
@@ -32,8 +32,8 @@ describe FluQ::Input::Kafka do
 
   describe "running" do
     before do
-      subject.consumer.stub!(:loop).and_yield([message, message])
-      subject.consumer.stub! offset: 2
+      subject.consumer.stub(:loop).and_yield([message, message])
+      subject.consumer.stub(offset: 2)
     end
 
     it 'should process events' do

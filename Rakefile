@@ -8,4 +8,4 @@ require 'yard'
 YARD::Rake::YardocTask.new
 
 desc 'Default: run specs.'
-task :default => :spec
+task default: :spec
