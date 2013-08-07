@@ -55,7 +55,7 @@ class FluQ::Input::Kafka < FluQ::Input::Base
 
   # @return [FluQ::Kafka::Store::Base] the store instance
   def store
-    @store ||= FluQ::Kafka::Store.new(config[:store], config[:store_options])
+    @store ||= FluQ::Kafka::Store.new(config[:store], key, config[:store_options])
   end
 
   # Start the loop

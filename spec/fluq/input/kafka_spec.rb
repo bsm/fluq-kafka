@@ -7,7 +7,7 @@ describe FluQ::Input::Kafka do
   let(:message) { ::Kafka::Message.new(event.to_msgpack) }
 
   def input(reactor)
-    described_class.new(reactor, bind: "kafka://127.0.0.1:9092/mytopic/2")
+    described_class.new(reactor, bind: "kafka://127.0.0.1:9092/mytopic/2", store: "file", store_options: { misc: 1 })
   end
 
   before :each do
@@ -22,12 +22,17 @@ describe FluQ::Input::Kafka do
   its(:key)    { should == "mytopic.2" }
   its(:topic)  { should == "mytopic" }
   its(:partition)  { should == 2 }
-  its(:config)   { should == {buffer: "file", feed: "msgpack", buffer_options: {}, max_size: 1048576, interval: 10, bind: "kafka://127.0.0.1:9092/mytopic/2", store: "file", store_options: {}} }
+  its(:config)   { should == {buffer: "file", feed: "msgpack", buffer_options: {}, max_size: 1048576, interval: 10, bind: "kafka://127.0.0.1:9092/mytopic/2", store: "file", store_options: { misc: 1 } } }
   its(:consumer) { should be_instance_of(::Kafka::Consumer) }
   its(:store)    { should be_instance_of(FluQ::Kafka::Store::File) }
 
   it 'should require bind option' do
     -> { described_class.new(reactor) }.should raise_error(ArgumentError, /No URL to bind/)
+  end
+
+  it 'should configure store name & options' do
+    subject.store.name.should == 'mytopic.2'
+    subject.store.opts.should == { misc: 1 }
   end
 
   describe "running" do

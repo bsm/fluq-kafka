@@ -1,6 +1,6 @@
 class FluQ::Kafka::Store::Base
 
-  attr_reader :name
+  attr_reader :name, :opts
 
   # @param [String] name topic/partition name
   # @param [Hash] opts options
