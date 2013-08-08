@@ -53,8 +53,8 @@ class FluQ::Input::Kafka < FluQ::Input::Base
 
   # Start the loop
   def run
-    consumer.consume do |message|
-      process([message])
+    consumer.consume do |messages|
+      process(messages)
     end
   end
 

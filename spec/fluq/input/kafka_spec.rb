@@ -42,12 +42,12 @@ describe FluQ::Input::Kafka do
   describe "running" do
 
     before do
-      subject.consumer.stub(:consume).and_yield(message).and_yield(message)
+      subject.consumer.stub(:consume).and_yield([message, message])
       subject.consumer.stub(offset: 2)
     end
 
     it 'should process events' do
-      reactor.should_receive(:process).twice
+      reactor.should_receive(:process)
       -> { subject.run }.should change { subject.store.offset }.from(0).to(2)
     end
 

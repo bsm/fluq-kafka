@@ -9,7 +9,7 @@ GEM
   remote: https://rubygems.org/
   specs:
     diff-lcs (1.2.4)
-    em-kafka (0.0.1)
+    em-kafka (0.0.2)
       eventmachine-le (>= 1.1.5)
       yajl-ruby (>= 0.8.2)
     eventmachine-le (1.1.5)
