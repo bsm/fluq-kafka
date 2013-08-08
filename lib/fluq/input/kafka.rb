@@ -1,4 +1,4 @@
-require 'kafka'
+require 'em-kafka'
 
 class FluQ::Input::Kafka < FluQ::Input::Base
 
@@ -43,14 +43,7 @@ class FluQ::Input::Kafka < FluQ::Input::Base
 
   # @return [Kafka::Consumer] the consumer instance
   def consumer
-    @consumer ||= ::Kafka::Consumer.new \
-      host: @url.host,
-      port: @url.port,
-      topic: topic,
-      partition: partition,
-      max_size: config[:max_size],
-      polling: config[:interval],
-      offset: store.offset
+    @consumer ||= ::EM::Kafka::Consumer.new("kafka://#{topic}@#{@url.host}:#{@url.port}/#{partition}", max_size: config[:max_size], polling: config[:interval], offset: store.offset)
   end
 
   # @return [FluQ::Kafka::Store::Base] the store instance
@@ -60,15 +53,15 @@ class FluQ::Input::Kafka < FluQ::Input::Base
 
   # Start the loop
   def run
-    consumer.loop do |messages|
-      process(messages)
+    consumer.consume do |message|
+      process([message])
     end
   end
 
   protected
 
     def defaults
-      super.merge max_size: ::Kafka::Consumer::MAX_SIZE, interval: 10, store: "file", store_options: {}
+      super.merge max_size: ::EM::Kafka::MESSAGE_MAX_SIZE, interval: 10, store: "file", store_options: {}
     end
 
   private

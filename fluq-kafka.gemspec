@@ -22,7 +22,7 @@ Gem::Specification.new do |s|
   s.test_files = `git ls-files -- {test,spec,features}/*`.split("\n")
 
   s.add_dependency "fluq", "~> #{s.version}"
-  s.add_dependency "kafka-rb"
+  s.add_dependency "em-kafka"
 
   s.add_development_dependency "rake"
   s.add_development_dependency "bundler"
