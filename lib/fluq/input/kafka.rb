@@ -1,5 +1,3 @@
-require 'em-kafka'
-
 class FluQ::Input::Kafka < FluQ::Input::Base
 
   # @attr_reader [URI] url the URL
