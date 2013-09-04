@@ -1,22 +1,18 @@
 require 'spec_helper'
 
 describe FluQ::Input::Kafka do
-  before do
-    @client = double("Client", connect: true)
-    EM::Kafka::Client.stub(new: @client)
-  end
 
   let(:event)   { FluQ::Event.new("some.tag", 1313131313, {}) }
   let(:reactor) { FluQ::Reactor.new }
-  let(:message) { ::EM::Kafka::Message.new(event.to_msgpack) }
+  let(:message) { ::Kafka::Message.new(event.to_msgpack) }
 
   def input(reactor)
     described_class.new(reactor, bind: "kafka://127.0.0.1:9092/mytopic/2", store: "file", store_options: { misc: 1 })
   end
 
   before :each do
-    @double_socket = double(TCPSocket)
-    TCPSocket.stub(:new).and_return(@double_socket) # don't use a real socket
+    @mock_socket = double(TCPSocket)
+    TCPSocket.stub(:new).and_return(@mock_socket) # don't use a real socket
   end
 
   subject { input(reactor) }
@@ -25,9 +21,10 @@ describe FluQ::Input::Kafka do
   its(:name)   { should == "kafka (mytopic.2)" }
   its(:key)    { should == "mytopic.2" }
   its(:topic)  { should == "mytopic" }
+  its(:port)  { should == 9092 }
   its(:partition)  { should == 2 }
-  its(:config)   { should == {buffer: "file", feed: "msgpack", buffer_options: {}, max_size: 1048576, interval: 10, bind: "kafka://127.0.0.1:9092/mytopic/2", store: "file", store_options: { misc: 1 } } }
-  its(:consumer) { should be_instance_of(::EM::Kafka::Consumer) }
+  its(:config)   { should == {buffer: "file", feed: "msgpack", buffer_options: {}, max_size: 10485760, interval: 10, bind: "kafka://127.0.0.1:9092/mytopic/2", store: "file", store_options: { misc: 1 } } }
+  its(:consumer) { should be_instance_of(::Kafka::Consumer) }
   its(:store)    { should be_instance_of(FluQ::Kafka::Store::File) }
 
   it 'should require bind option' do
@@ -41,14 +38,38 @@ describe FluQ::Input::Kafka do
 
   describe "running" do
 
-    before do
-      subject.consumer.stub(:consume).and_yield([message, message])
-      subject.consumer.stub(offset: 2)
+    def offset
+      subject.store.offset
+    end
+
+    after do
+      subject.stop
     end
 
     it 'should process events' do
+      subject.consumer.stub(consume: [message, message], offset: 2)
+
       reactor.should_receive(:process)
-      -> { subject.run }.should change { subject.store.offset }.from(0).to(2)
+      offset.should == 0
+      thread = subject.run
+      thread.should be_instance_of(Thread)
+      10.times { sleep(0.05) while offset < 2 }
+
+      offset.should == 2
+      thread.should be_alive
+    end
+
+    it 'should catch processing errors' do
+      subject.consumer.stub(consume: ["\x00\x01\x02", message], offset: 2)
+
+      reactor.should_not_receive(:process)
+      subject.logger.should_receive(:crash)
+
+      offset.should == 0
+      thread = subject.run
+      10.times { sleep(0.05) while offset < 2 }
+      offset.should == 2
+      thread.should be_alive
     end
 
   end

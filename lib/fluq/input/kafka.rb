@@ -39,30 +39,54 @@ class FluQ::Input::Kafka < FluQ::Input::Base
     @partition ||= @url.path.split("/").last.to_i
   end
 
+  # @return [Integer] port
+  def port
+    @url.port || Kafka::IO::PORT
+  end
+
   # @return [Kafka::Consumer] the consumer instance
   def consumer
-    @consumer ||= ::EM::Kafka::Consumer.new("kafka://#{topic}@#{@url.host}:#{@url.port}/#{partition}", max_size: config[:max_size], polling: config[:interval], offset: store.offset)
+    @consumer ||= ::Kafka::Consumer.new \
+      host: @url.host,
+      port: port,
+      topic: topic,
+      partition: partition,
+      max_size: config[:max_size],
+      polling: config[:interval],
+      offset: store.offset
   end
 
   # @return [FluQ::Kafka::Store::Base] the store instance
   def store
-    @store ||= FluQ::Kafka::Store.new(config[:store], key, config[:store_options])
+    @store ||= FluQ::Kafka::Store.new config[:store], key, config[:store_options]
   end
 
   # Start the loop
   def run
-    consumer.consume do |messages|
-      process(messages)
-    end
+    @loop ||= Thread.new { run_loop }
+  end
+
+  # Stops the loop
+  def stop
+    return unless @loop
+    @loop.kill
+    sleep(0.1) while @loop.alive?
+    @loop = nil
   end
 
   protected
 
     def defaults
-      super.merge max_size: ::EM::Kafka::MESSAGE_MAX_SIZE, interval: 10, store: "file", store_options: {}
+      super.merge max_size: (10 * 1024 * 1024), interval: 10, store: "file", store_options: {}
     end
 
   private
+
+    def run_loop
+      consumer.loop do |messages|
+        process messages
+      end
+    end
 
     def process(messages)
       events = messages.map do |msg|
