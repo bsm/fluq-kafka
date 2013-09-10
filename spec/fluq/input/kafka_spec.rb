@@ -72,6 +72,13 @@ describe FluQ::Input::Kafka do
       thread.should be_alive
     end
 
+    it 'should not stop loop on consumer errors' do
+      subject.consumer.stub(:consume).once.and_raise
+      subject.consumer.stub(:consume).once.and_return(message)
+      thread = subject.run
+      thread.should be_alive
+    end
+
   end
 
 end

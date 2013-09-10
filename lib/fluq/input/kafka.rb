@@ -86,6 +86,10 @@ class FluQ::Input::Kafka < FluQ::Input::Base
       consumer.loop do |messages|
         process messages
       end
+    rescue => ex
+      logger.crash "#{self.class.name} #{self.name} failed: #{ex.class.name} #{ex.message}", ex
+      sleep(1)
+      retry
     end
 
     def process(messages)
@@ -93,8 +97,6 @@ class FluQ::Input::Kafka < FluQ::Input::Base
         feed_klass.to_event(msg.payload)
       end.compact
       reactor.process(events) unless events.empty?
-    rescue => ex
-      logger.crash "#{self.class.name} #{self.name} failed: #{ex.class.name} #{ex.message}", ex
     ensure
       store.offset = consumer.offset
     end
