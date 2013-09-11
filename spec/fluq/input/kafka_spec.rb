@@ -47,25 +47,27 @@ describe FluQ::Input::Kafka do
     end
 
     it 'should process events' do
-      subject.consumer.stub(consume: [message, message], offset: 2)
+      subject.consumer.stub(consume: [message, message], offset: 101)
 
       reactor.should_receive(:process)
       offset.should == 0
       thread = subject.run
       thread.should be_instance_of(Thread)
-      10.times { sleep(0.05) while offset < 2 }
+      10.times { sleep(0.05) if offset < 101 }
 
-      offset.should == 2
+      offset.should == 101
       thread.should be_alive
     end
 
     it 'should catch processing errors' do
-      subject.consumer.stub(consume: ["\x00\x01\x02", message], offset: 101)
+      subject.consumer.stub(read_data_response: ::Kafka::Message.new("ABCD").encode, send_consume_request: nil, fetch_latest_offset: 101)
 
+      raised = false
       reactor.should_not_receive(:process)
-      subject.logger.should_receive(:crash)
+      subject.logger.should_receive(:crash).with {|c| raised = true }
 
       thread = subject.run
+      10.times { sleep(0.05) unless raised }
       offset.should == 0
       thread.should be_alive
     end
