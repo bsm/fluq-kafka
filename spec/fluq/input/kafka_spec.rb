@@ -60,22 +60,23 @@ describe FluQ::Input::Kafka do
     end
 
     it 'should catch processing errors' do
-      subject.consumer.stub(consume: ["\x00\x01\x02", message], offset: 2)
+      subject.consumer.stub(consume: ["\x00\x01\x02", message], offset: 101)
 
       reactor.should_not_receive(:process)
       subject.logger.should_receive(:crash)
 
-      offset.should == 0
       thread = subject.run
-      10.times { sleep(0.05) while offset < 2 }
-      offset.should == 2
+      offset.should == 0
       thread.should be_alive
     end
 
     it 'should not stop loop on consumer errors' do
       subject.consumer.stub(:consume).once.and_raise
-      subject.consumer.stub(:consume).once.and_return(message)
+      subject.consumer.stub(:consume).once.and_return([message])
+      subject.consumer.stub(:offset).and_return(101)
       thread = subject.run
+      10.times { sleep(0.1) if offset.zero? }
+      offset.should == 101
       thread.should be_alive
     end
 
