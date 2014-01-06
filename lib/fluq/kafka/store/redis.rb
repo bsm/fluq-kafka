@@ -17,7 +17,8 @@ class FluQ::Kafka::Store::Redis < FluQ::Kafka::Store::Base
 
   # @see FluQ::Kafka::Store::Base#offset
   def offset
-    redis.get(key).to_i
+    val = redis.get(key)
+    val ? val.to_i : nil
   end
 
   # @see FluQ::Kafka::Store::Base#offset=
@@ -26,4 +27,3 @@ class FluQ::Kafka::Store::Redis < FluQ::Kafka::Store::Base
   end
 
 end
-

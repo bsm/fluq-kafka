@@ -50,10 +50,10 @@ describe FluQ::Input::Kafka do
       subject.consumer.stub(consume: [message, message], offset: 101)
 
       reactor.should_receive(:process)
-      offset.should == 0
+      offset.should be(nil)
       thread = subject.run
       thread.should be_instance_of(Thread)
-      10.times { sleep(0.05) if offset < 101 }
+      10.times { sleep(0.05) if offset.nil? || offset < 101 }
 
       offset.should == 101
       thread.should be_alive
@@ -68,7 +68,7 @@ describe FluQ::Input::Kafka do
 
       thread = subject.run
       10.times { sleep(0.05) unless raised }
-      offset.should == 0
+      offset.should be(nil)
       thread.should be_alive
     end
 
@@ -77,7 +77,7 @@ describe FluQ::Input::Kafka do
       subject.consumer.stub(:consume).once.and_return([message])
       subject.consumer.stub(:offset).and_return(101)
       thread = subject.run
-      10.times { sleep(0.1) if offset.zero? }
+      10.times { sleep(0.1) if offset.nil? }
       offset.should == 101
       thread.should be_alive
     end

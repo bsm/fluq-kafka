@@ -10,9 +10,9 @@ class FluQ::Kafka::Store::Base
   end
 
   # @abstract
-  # @return [Integer] offset
+  # @return [Integer,nil] offset (nil if offset is not set)
   def offset
-    0
+    nil
   end
 
   # @abstract

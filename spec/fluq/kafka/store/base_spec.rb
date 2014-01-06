@@ -5,7 +5,7 @@ describe FluQ::Kafka::Store::Base do
   subject { described_class.new "base" }
 
   its(:name) { should == "base" }
-  its(:offset) { should == 0 }
+  its(:offset) { should be(nil) }
   it { should respond_to(:offset=) }
 
 end

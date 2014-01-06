@@ -8,7 +8,7 @@ describe FluQ::Kafka::Store::File do
   its(:path) { should == FluQ.root.join("log", "kafka", "topic.1.offset") }
 
   it "should read/write offset" do
-    subject.offset.should == 0
+    subject.offset.should be(nil)
     subject.offset = 5
     subject.offset.should == 5
     subject.offset = "60"

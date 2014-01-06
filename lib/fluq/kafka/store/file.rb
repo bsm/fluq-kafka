@@ -13,8 +13,7 @@ class FluQ::Kafka::Store::File < FluQ::Kafka::Store::Base
 
   # @see FluQ::Kafka::Store::Base#offset
   def offset
-    value = path.read if path.file?
-    value.to_i
+    path.file? ? path.read.to_i : nil
   end
 
   # @see FluQ::Kafka::Store::Base#offset=
@@ -25,4 +24,3 @@ class FluQ::Kafka::Store::File < FluQ::Kafka::Store::Base
   end
 
 end
-
