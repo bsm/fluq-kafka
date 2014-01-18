@@ -4,7 +4,7 @@ $:.push File.expand_path("../lib", __FILE__)
 require "fluq/kafka/version"
 
 Gem::Specification.new do |s|
-  s.required_ruby_version = '>= 2.0.0'
+  s.required_ruby_version = '>= 1.9.1'
   s.required_rubygems_version = ">= 1.8.0"
 
   s.name        = File.basename(__FILE__, '.gemspec')
@@ -22,11 +22,10 @@ Gem::Specification.new do |s|
   s.test_files = `git ls-files -- {test,spec,features}/*`.split("\n")
 
   s.add_dependency "fluq", "~> #{s.version}"
-  s.add_dependency "kafka-rb"
+  s.add_dependency "poseidon_cluster"
 
   s.add_development_dependency "rake"
   s.add_development_dependency "bundler"
   s.add_development_dependency "rspec"
   s.add_development_dependency "yard"
-  s.add_development_dependency "redis"
 end

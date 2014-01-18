@@ -1,5 +1,8 @@
 require 'fluq'
 require 'fluq/kafka/version'
-require 'kafka'
-require 'fluq/kafka/store'
+require 'poseidon_cluster'
 require 'fluq/input/kafka'
+
+class Poseidon::Connection
+  TCPSocket = Celluloid::IO::TCPSocket
+end

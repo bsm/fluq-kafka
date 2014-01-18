@@ -1,103 +1,91 @@
 class FluQ::Input::Kafka < FluQ::Input::Base
 
-  # @attr_reader [URI] url the URL
-  attr_reader :url
-
   # Constructor.
-  # @option options [String] :bind the URL to bind to, format: kafka://HOST:PORT/TOPIC/PARTITION
-  # @option options [String] :max_size the Kafka max message size, defaults to 1M
-  # @option options [String] :interval the Kafka polling interval, defaults to 10s
-  # @raises [ArgumentError] when no bind URL provided
-  # @raises [URI::InvalidURIError] if invalid URL is given
+  # @option options [String] :topic the name of the topic to consume
+  # @option options [String] :group
+  #   The unique consumer group name. Each topic message is consumed only once by members of the same group.
+  #   If you have multiple thread/process instances running, make sure you assign them the same group name to
+  #   ensure events are not duplicated.
+  # @option options [String] :brokers an array of "HOST:PORT" broker addresses, e.g. ["localhost:9092"]
+  # @option options [String] :zookeepers an array of "HOST:PORT" zookeeper addresses, e.g. ["localhost:2181"]
+  # @option options [Integer] :max_bytes maximum number of bytes to fetch
+  #   Default: 1048576 (1MB)
+  # @option options [Integer] :max_wait_ms how long to block until the server sends us data.
+  #   Default: 100 (100ms)
+  # @option options [Integer] :min_bytes smallest amount of data the server should send us.
+  #   Default: 0 (send us data as soon as it is ready)
+  #
+  # @raises [ArgumentError] when no topic provided
+  #
   # @example
   #
-  #   FluQ::Input::Kafka.new reactor, bind: "kafka://localhost:9092/my_topic/0",
+  #   FluQ::Input::Kafka.new handlers,
+  #     topic: "page-views",
+  #     group: "fluq",
+  #     brokers: ["localhost:9092"],
+  #     zookeepers: ["localhost:2181"]
   def initialize(*)
     super
+  end
 
-    raise ArgumentError, 'No URL to bind to provided, make sure you pass :bind option' unless config[:bind]
-    @url = FluQ::URL.parse(config[:bind], ["kafka", "tcp"])
+  # @return [String] short name
+  def name
+    "kafka:#{config[:topic]}"
   end
 
   # @return [String] descriptive name
-  def name
-    @name ||= "#{super} (#{key})"
-  end
-
-  # @return [String] unique topic name
-  def key
-    @key ||= [topic, partition].join(".")
-  end
-
-  # @return [String] topic name
-  def topic
-    @topic ||= @url.path.sub(/^\//, '').split("/").first || 'test'
-  end
-
-  # @return [Integer] partition
-  def partition
-    @partition ||= @url.path.split("/").last.to_i
-  end
-
-  # @return [Integer] port
-  def port
-    @url.port || Kafka::IO::PORT
-  end
-
-  # @return [Kafka::Consumer] the consumer instance
-  def consumer
-    @consumer ||= ::Kafka::Consumer.new \
-      host: @url.host,
-      port: port,
-      topic: topic,
-      partition: partition,
-      max_size: config[:max_size],
-      polling: config[:interval],
-      offset: store.offset
-  end
-
-  # @return [FluQ::Kafka::Store::Base] the store instance
-  def store
-    @store ||= FluQ::Kafka::Store.new config[:store], key, config[:store_options]
+  def description
+    "#{name} (#{config[:group]} <- #{config[:brokers].join(',')})"
   end
 
   # Start the loop
   def run
-    @loop ||= Thread.new { run_loop }
+    super
+
+    consumer.fetch_loop do |partition, bulk|
+      process partition, bulk
+    end
   end
 
-  # Stops the loop
-  def stop
-    return unless @loop
-    @loop.kill
-    sleep(0.1) while @loop.alive?
-    @loop = nil
+  # Processes messages
+  # @param [Integer] partition
+  # @param [Array<Poseidon::Message>] messages
+  def process(partition, messages)
+    events = []
+    messages.each do |m|
+      events.concat format.parse(m.value)
+    end
+    events.each do |event|
+      event.meta.update topic: config[:topic], partition: partition
+    end
+    worker.process events
   end
 
   protected
 
+    def consumer
+      @consumer ||= ::Poseidon::ConsumerGroup.new config[:group], config[:brokers], config[:zookeepers], config[:topic],
+        min_bytes: config[:min_bytes],
+        max_bytes: config[:max_bytes],
+        max_wait_ms: config[:max_wait_ms]
+    end
+
+    def configure
+      raise ArgumentError, 'No topic provided, make sure you pass a :topic option' unless config[:topic]
+    end
+
     def defaults
-      super.merge max_size: (10 * 1024 * 1024), interval: 10, store: "file", store_options: {}
+      super.merge \
+        group: "fluq",
+        min_bytes: 0,
+        max_bytes: (1024 * 1024),
+        max_wait_ms: 100,
+        brokers: ["localhost:9092"],
+        zookeepers: ["localhost:2181"]
     end
 
-  private
-
-    def run_loop
-      consumer.loop do |messages|
-        process messages
-      end
-    rescue => ex
-      logger.crash "#{self.class.name} #{self.name} failed: #{ex.class.name} #{ex.message}", ex
-      sleep config[:interval]
-      retry
-    end
-
-    def process(messages)
-      events = messages.map do |msg|
-        feed_klass.to_event(msg.payload)
-      end.compact
-      reactor.process(events) unless events.empty?
-      store.offset = consumer.offset
+    def before_terminate
+      @consumer.close if @consumer
     end
 
 end

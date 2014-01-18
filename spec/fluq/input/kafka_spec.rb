@@ -2,86 +2,39 @@ require 'spec_helper'
 
 describe FluQ::Input::Kafka do
 
-  let(:event)   { FluQ::Event.new("some.tag", 1313131313, {}) }
-  let(:reactor) { FluQ::Reactor.new }
-  let(:message) { ::Kafka::Message.new(event.to_msgpack) }
+  let(:message) { Poseidon::Message.new value: %({"a":1,"b":2}) }
+  let(:actors)  { [] }
 
-  def input(reactor)
-    described_class.new(reactor, bind: "kafka://127.0.0.1:9092/mytopic/2", store: "file", store_options: { misc: 1 })
+  let :mock_consumer do
+    double Poseidon::ConsumerGroup, claimed: [], fetch_loop: nil, close: true
   end
 
-  before :each do
-    @mock_socket = double(TCPSocket)
-    TCPSocket.stub(:new).and_return(@mock_socket) # don't use a real socket
+  def input(opts = {})
+    actor = described_class.new [[FluQ::Handler::Test]], opts
+    actors << actor
+    actor
   end
 
-  subject { input(reactor) }
+  before  { Poseidon::ConsumerGroup.stub new: mock_consumer }
+  after   { actors.each &:terminate }
+  subject { input topic: "my-topic" }
 
   it { should be_a(FluQ::Input::Base) }
-  its(:name)   { should == "kafka (mytopic.2)" }
-  its(:key)    { should == "mytopic.2" }
-  its(:topic)  { should == "mytopic" }
-  its(:port)  { should == 9092 }
-  its(:partition)  { should == 2 }
-  its(:config)   { should == {buffer: "file", feed: "msgpack", buffer_options: {}, max_size: 10485760, interval: 10, bind: "kafka://127.0.0.1:9092/mytopic/2", store: "file", store_options: { misc: 1 } } }
-  its(:consumer) { should be_instance_of(::Kafka::Consumer) }
-  its(:store)    { should be_instance_of(FluQ::Kafka::Store::File) }
+  its(:description) { should == "kafka:my-topic (fluq <- localhost:9092)" }
+  its(:name)        { should == "kafka:my-topic" }
+  its(:config)      { should == {format: "json", format_options: {}, group: "fluq", min_bytes: 0, max_bytes: 1048576, max_wait_ms: 100, brokers: ["localhost:9092"], zookeepers: ["localhost:2181"], topic: "my-topic"} }
 
-  it 'should require bind option' do
-    -> { described_class.new(reactor) }.should raise_error(ArgumentError, /No URL to bind/)
+  it 'should require a topic option' do
+    -> { input }.should raise_error(ArgumentError, /No topic provided/)
   end
 
-  it 'should configure store name & options' do
-    subject.store.name.should == 'mytopic.2'
-    subject.store.opts.should == { misc: 1 }
-  end
-
-  describe "running" do
-
-    def offset
-      subject.store.offset
-    end
-
-    after do
-      subject.stop
-    end
-
-    it 'should process events' do
-      subject.consumer.stub(consume: [message, message], offset: 101)
-
-      reactor.should_receive(:process)
-      offset.should be(nil)
-      thread = subject.run
-      thread.should be_instance_of(Thread)
-      10.times { sleep(0.05) if offset.nil? || offset < 101 }
-
-      offset.should == 101
-      thread.should be_alive
-    end
-
-    it 'should catch processing errors' do
-      subject.consumer.stub(read_data_response: ::Kafka::Message.new("ABCD").encode, send_consume_request: nil, fetch_latest_offset: 101)
-
-      raised = false
-      reactor.should_not_receive(:process)
-      subject.logger.should_receive(:crash).with {|c| raised = true }
-
-      thread = subject.run
-      10.times { sleep(0.05) unless raised }
-      offset.should be(nil)
-      thread.should be_alive
-    end
-
-    it 'should not stop loop on consumer errors' do
-      subject.consumer.stub(:consume).once.and_raise
-      subject.consumer.stub(:consume).once.and_return([message])
-      subject.consumer.stub(:offset).and_return(101)
-      thread = subject.run
-      10.times { sleep(0.1) if offset.nil? }
-      offset.should == 101
-      thread.should be_alive
-    end
-
+  it 'should fetch messages' do
+    mock_consumer.should_receive(:fetch_loop).and_yield(3, [message]*10)
+    subject.worker.should have(1).handlers
+    subject.worker.handlers.first.should have(10).events
+    event = subject.worker.handlers.first.events.first
+    event.should == {"a"=>1,"b"=>2}
+    event.meta.should == {topic: "my-topic", partition: 3}
   end
 
 end
