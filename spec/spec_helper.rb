@@ -3,6 +3,9 @@ ENV['FLUQ_ROOT'] ||= File.expand_path("../scenario/", __FILE__)
 
 require 'bundler/setup'
 require 'rspec'
+require 'coveralls'
+Coveralls.wear!
+
 require 'fluq/kafka'
 require 'fluq/testing'
 
