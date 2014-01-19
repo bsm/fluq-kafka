@@ -1,6 +1,6 @@
 GIT
   remote: https://github.com/bsm/fluq.git
-  revision: 5445ea1e5d3e93025b6dd53b891dfa0266ee500a
+  revision: 84669dc9d07b118e7a4f0d899ba83dfc922e169f
   specs:
     fluq (0.8.0)
       celluloid-io (~> 0.15.0)

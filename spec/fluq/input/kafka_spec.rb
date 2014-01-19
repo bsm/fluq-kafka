@@ -10,7 +10,7 @@ describe FluQ::Input::Kafka do
   end
 
   def input(opts = {})
-    actor = described_class.new [[FluQ::Handler::Test]], opts
+    actor = described_class.new "my-feed", [[FluQ::Handler::Test]], opts
     actors << actor
     actor
   end
