@@ -1,4 +1,4 @@
 source "https://rubygems.org"
 
 gemspec
-gem "fluq", git: "https://github.com/bsm/fluq.git"
+gem "poseidon", git: "https://github.com/dim/poseidon.git"

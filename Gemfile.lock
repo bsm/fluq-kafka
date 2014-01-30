@@ -1,11 +1,8 @@
 GIT
-  remote: https://github.com/bsm/fluq.git
-  revision: 84669dc9d07b118e7a4f0d899ba83dfc922e169f
+  remote: https://github.com/dim/poseidon.git
+  revision: f853e8f07a6f2ff4a520d3f7e1dac030453a18ed
   specs:
-    fluq (0.8.0)
-      celluloid-io (~> 0.15.0)
-      multi_json
-      timed_lru
+    poseidon (0.0.4)
 
 PATH
   remote: .
@@ -30,15 +27,18 @@ GEM
       thor
     diff-lcs (1.2.5)
     docile (1.1.2)
+    fluq (0.8.0)
+      celluloid-io (~> 0.15.0)
+      multi_json
+      timed_lru
     little-plugger (1.1.3)
     logging (1.7.2)
       little-plugger (>= 1.1.3)
-    mime-types (2.0)
+    mime-types (2.1)
     multi_json (1.8.4)
     nio4r (1.0.0)
     nio4r (1.0.0-java)
-    poseidon (0.0.4)
-    poseidon_cluster (0.0.3)
+    poseidon_cluster (0.0.5)
       poseidon
       zk
     rake (10.1.1)
@@ -81,8 +81,8 @@ PLATFORMS
 DEPENDENCIES
   bundler
   coveralls
-  fluq!
   fluq-kafka!
+  poseidon!
   rake
   rspec
   yard

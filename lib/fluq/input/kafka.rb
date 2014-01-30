@@ -86,6 +86,7 @@ class FluQ::Input::Kafka < FluQ::Input::Base
 
     def before_terminate
       @consumer.close if @consumer
+    rescue ThreadError
     end
 
 end
