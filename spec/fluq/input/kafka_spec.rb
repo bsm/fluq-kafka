@@ -22,7 +22,7 @@ describe FluQ::Input::Kafka do
   it { should be_a(FluQ::Input::Base) }
   its(:description) { should == "kafka:my-topic (fluq <- localhost:9092)" }
   its(:name)        { should == "kafka:my-topic" }
-  its(:config)      { should == {format: "json", format_options: {}, group: "fluq", min_bytes: 0, max_bytes: 1048576, max_wait_ms: 100, brokers: ["localhost:9092"], zookeepers: ["localhost:2181"], topic: "my-topic"} }
+  its(:config)      { should == {format: "json", format_options: {}, group: "fluq", min_bytes: 0, max_bytes: 1048576, max_wait_ms: 100, brokers: ["localhost:9092"], zookeepers: ["localhost:2181"], topic: "my-topic", loop_delay: 0.5} }
 
   it 'should require a topic option' do
     -> { input }.should raise_error(ArgumentError, /No topic provided/)
