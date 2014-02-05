@@ -1,4 +1,12 @@
 GIT
+  remote: https://github.com/bsm/poseidon_cluster.git
+  revision: 540110f33f3176ba980444509844d075fa11434a
+  specs:
+    poseidon_cluster (0.1.0)
+      poseidon
+      zk
+
+GIT
   remote: https://github.com/dim/poseidon.git
   revision: f853e8f07a6f2ff4a520d3f7e1dac030453a18ed
   specs:
@@ -26,7 +34,7 @@ GEM
       term-ansicolor
       thor
     diff-lcs (1.2.5)
-    docile (1.1.2)
+    docile (1.1.3)
     fluq (0.8.0)
       celluloid-io (~> 0.15.0)
       multi_json
@@ -38,9 +46,6 @@ GEM
     multi_json (1.8.4)
     nio4r (1.0.0)
     nio4r (1.0.0-java)
-    poseidon_cluster (0.0.5)
-      poseidon
-      zk
     rake (10.1.1)
     rest-client (1.6.7)
       mime-types (>= 1.16)
@@ -49,9 +54,9 @@ GEM
       rspec-expectations (~> 2.14.0)
       rspec-mocks (~> 2.14.0)
     rspec-core (2.14.7)
-    rspec-expectations (2.14.4)
+    rspec-expectations (2.14.5)
       diff-lcs (>= 1.1.3, < 2.0)
-    rspec-mocks (2.14.4)
+    rspec-mocks (2.14.5)
     simplecov (0.8.2)
       docile (~> 1.1.0)
       multi_json
@@ -64,7 +69,7 @@ GEM
     thor (0.18.1)
     timed_lru (0.3.1)
     timers (1.1.0)
-    tins (0.13.1)
+    tins (0.13.2)
     yard (0.8.7.3)
     zk (1.9.3)
       logging (~> 1.7.2)
@@ -83,6 +88,7 @@ DEPENDENCIES
   coveralls
   fluq-kafka!
   poseidon!
+  poseidon_cluster!
   rake
   rspec
   yard

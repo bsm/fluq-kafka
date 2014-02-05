@@ -64,7 +64,7 @@ class FluQ::Input::Kafka < FluQ::Input::Base
   protected
 
     def consumer
-      @consumer ||= ::Poseidon::ConsumerGroup.new config[:group], config[:brokers], config[:zookeepers], config[:topic],
+      @consumer ||= ::FluQ::Kafka::Consumer.new config[:group], config[:brokers], config[:zookeepers], config[:topic],
         min_bytes: config[:min_bytes],
         max_bytes: config[:max_bytes],
         max_wait_ms: config[:max_wait_ms]
