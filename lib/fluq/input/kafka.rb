@@ -67,8 +67,7 @@ class FluQ::Input::Kafka < FluQ::Input::Base
       @consumer ||= ::FluQ::Kafka::Consumer.new config[:group], config[:brokers], config[:zookeepers], config[:topic],
         min_bytes: config[:min_bytes],
         max_bytes: config[:max_bytes],
-        max_wait_ms: config[:max_wait_ms],
-        loop_delay: config[:loop_delay]
+        max_wait_ms: config[:max_wait_ms]
     end
 
     def configure
@@ -81,7 +80,6 @@ class FluQ::Input::Kafka < FluQ::Input::Base
         min_bytes: 0,
         max_bytes: (1024 * 1024),
         max_wait_ms: 100,
-        loop_delay: 0.5,
         brokers: ["localhost:9092"],
         zookeepers: ["localhost:2181"]
     end
