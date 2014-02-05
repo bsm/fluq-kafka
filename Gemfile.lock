@@ -1,6 +1,6 @@
 GIT
   remote: https://github.com/bsm/poseidon_cluster.git
-  revision: 540110f33f3176ba980444509844d075fa11434a
+  revision: 11733533a25969058c22aa9bc04a60166ba79678
   specs:
     poseidon_cluster (0.1.0)
       poseidon
@@ -15,7 +15,7 @@ GIT
 PATH
   remote: .
   specs:
-    fluq-kafka (0.8.0)
+    fluq-kafka (0.8.1)
       fluq (~> 0.8.0)
       poseidon_cluster
 

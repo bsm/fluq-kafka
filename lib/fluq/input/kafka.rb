@@ -14,6 +14,8 @@ class FluQ::Input::Kafka < FluQ::Input::Base
   #   Default: 100 (100ms)
   # @option options [Integer] :min_bytes smallest amount of data the server should send us.
   #   Default: 0 (send us data as soon as it is ready)
+  # @option options [Class] :consumer_class the consumer class to use.
+  #   Ddefault: FluQ::Kafka::Consumer
   #
   # @raises [ArgumentError] when no topic provided
   #
@@ -64,7 +66,7 @@ class FluQ::Input::Kafka < FluQ::Input::Base
   protected
 
     def consumer
-      @consumer ||= ::FluQ::Kafka::Consumer.new config[:group], config[:brokers], config[:zookeepers], config[:topic],
+      @consumer ||= config[:consumer_class].new config[:group], config[:brokers], config[:zookeepers], config[:topic],
         min_bytes: config[:min_bytes],
         max_bytes: config[:max_bytes],
         max_wait_ms: config[:max_wait_ms]
@@ -81,12 +83,16 @@ class FluQ::Input::Kafka < FluQ::Input::Base
         max_bytes: (1024 * 1024),
         max_wait_ms: 100,
         brokers: ["localhost:9092"],
-        zookeepers: ["localhost:2181"]
+        zookeepers: ["localhost:2181"],
+        consumer_class: ::FluQ::Kafka::Consumer
+
     end
 
     def before_terminate
       @consumer.close if @consumer
     rescue ThreadError
+    ensure
+      @consumer = nil
     end
 
 end
