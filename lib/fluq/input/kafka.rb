@@ -15,7 +15,7 @@ class FluQ::Input::Kafka < FluQ::Input::Base
   # @option options [Integer] :min_bytes smallest amount of data the server should send us.
   #   Default: 0 (send us data as soon as it is ready)
   # @option options [Class] :consumer_class the consumer class to use.
-  #   Ddefault: FluQ::Kafka::Consumer
+  #   Default: FluQ::Kafka::Consumer
   #
   # @raises [ArgumentError] when no topic provided
   #
